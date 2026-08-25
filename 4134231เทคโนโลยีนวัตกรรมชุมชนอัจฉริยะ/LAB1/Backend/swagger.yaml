@@ -1,0 +1,231 @@
+openapi: 3.0.0
+info:
+  title: Fire Alert System API
+  description: API สำหรับระบบแจ้งเตือนเพลิงและควัน (Smart Community Alert System)
+  version: 0.1.0
+  contact:
+    name: Fire Alert Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+  - url: http://localhost:3000/api
+    description: API Base URL
+
+tags:
+  - name: Alerts
+    description: การจัดการการแจ้งเตือน
+  - name: Status
+    description: สถานะระบบ
+
+paths:
+  /alerts:
+    get:
+      tags:
+        - Alerts
+      summary: ดึงรายการการแจ้งเตือนทั้งหมด
+      description: ได้รับรายการการแจ้งเตือนทั้งหมดในระบบ
+      operationId: getAllAlerts
+      responses:
+        '200':
+          description: สำเร็จ - ส่งคืนรายการการแจ้งเตือน
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - id: '1'
+                  type: 'ควัน'
+                  severity: 'medium'
+                  status: 'new'
+                  message: 'ตรวจพบควันในโซน A'
+                  detectedAt: '2024-01-15T10:30:00.000Z'
+                  updatedAt: '2024-01-15T10:30:00.000Z'
+                - id: '2'
+                  type: 'ไฟ'
+                  severity: 'high'
+                  status: 'acknowledged'
+                  message: 'ตรวจพบเปลวไฟในโซน B'
+                  detectedAt: '2024-01-15T10:20:00.000Z'
+                  updatedAt: '2024-01-15T10:30:00.000Z'
+    
+    post:
+      tags:
+        - Alerts
+      summary: สร้างการแจ้งเตือนใหม่
+      description: สร้างการแจ้งเตือนใหม่ในระบบ
+      operationId: createAlert
+      requestBody:
+        description: ข้อมูลการแจ้งเตือนใหม่
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - severity
+                - status
+                - message
+              properties:
+                type:
+                  type: string
+                  description: ประเภทการแจ้งเตือน
+                  example: 'ควัน'
+                severity:
+                  type: string
+                  description: ระดับความรุนแรง
+                  enum: ['low', 'medium', 'high', 'critical']
+                  example: 'medium'
+                status:
+                  type: string
+                  description: สถานะการแจ้งเตือน
+                  enum: ['new', 'acknowledged', 'resolved']
+                  example: 'new'
+                message:
+                  type: string
+                  description: ข้อความแจ้งเตือน
+                  example: 'ตรวจพบควันในโซน A'
+      responses:
+        '201':
+          description: สร้างสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '400':
+          description: ข้อมูลไม่ถูกต้อง
+        '405':
+          description: Method not allowed
+
+  /alerts/{id}:
+    get:
+      tags:
+        - Alerts
+      summary: ดึงข้อมูลการแจ้งเตือนตามไอดี
+      description: ได้รับข้อมูลการแจ้งเตือนเฉพาะตามไอดี
+      operationId: getAlertById
+      parameters:
+        - name: id
+          in: path
+          description: ID ของการแจ้งเตือน
+          required: true
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          description: สำเร็จ - ส่งคืนข้อมูลการแจ้งเตือน
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '404':
+          description: ไม่พบการแจ้งเตือน
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'ไม่พบการแจ้งเตือน'
+        '405':
+          description: Method not allowed
+
+  /status:
+    get:
+      tags:
+        - Status
+      summary: ดึงสถานะระบบ
+      description: ได้รับสถานะปัจจุบันของระบบแจ้งเตือน
+      operationId: getSystemStatus
+      responses:
+        '200':
+          description: สำเร็จ - ส่งคืนสถานะระบบ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+              example:
+                smokeDetected: false
+                fireDetected: false
+                systemStatus: 'ปกติ'
+                lastUpdated: '2024-01-15T10:30:00.000Z'
+
+components:
+  schemas:
+    Alert:
+      type: object
+      required:
+        - id
+        - type
+        - severity
+        - status
+        - message
+        - detectedAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: ID เฉพาะของการแจ้งเตือน
+          example: '1'
+        type:
+          type: string
+          description: ประเภทการแจ้งเตือน
+          example: 'ควัน'
+        severity:
+          type: string
+          description: ระดับความรุนแรง
+          enum: ['low', 'medium', 'high', 'critical']
+          example: 'medium'
+        status:
+          type: string
+          description: สถานะการแจ้งเตือน
+          enum: ['new', 'acknowledged', 'resolved']
+          example: 'new'
+        message:
+          type: string
+          description: ข้อความแจ้งเตือน
+          example: 'ตรวจพบควันในโซน A'
+        detectedAt:
+          type: string
+          format: date-time
+          description: เวลาตรวจพบการแจ้งเตือน
+          example: '2024-01-15T10:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: เวลาอัปเดตล่าสุด
+          example: '2024-01-15T10:30:00.000Z'
+
+    SystemStatus:
+      type: object
+      required:
+        - smokeDetected
+        - fireDetected
+        - systemStatus
+        - lastUpdated
+      properties:
+        smokeDetected:
+          type: boolean
+          description: สถานะการตรวจจับควัน
+          example: false
+        fireDetected:
+          type: boolean
+          description: สถานะการตรวจจับไฟ
+          example: false
+        systemStatus:
+          type: string
+          description: สถานะทั่วไปของระบบ
+          enum: ['ปกติ', 'เตือน', 'ฉุกเฉิน']
+          example: 'ปกติ'
+        lastUpdated:
+          type: string
+          format: date-time
+          description: เวลาอัปเดตล่าสุด
+          example: '2024-01-15T10:30:00.000Z'
