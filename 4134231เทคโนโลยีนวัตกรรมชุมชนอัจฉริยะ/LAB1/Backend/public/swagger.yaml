@@ -1,0 +1,125 @@
+openapi: 3.0.0
+info:
+  title: Fire Alert System API
+  description: API สำหรับระบบแจ้งเตือนเพลิงและควัน (Smart Community Alert System)
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+
+tags:
+  - name: Alerts
+    description: การจัดการการแจ้งเตือน
+  - name: Status
+    description: สถานะระบบ
+
+paths:
+  /api/alerts:
+    get:
+      tags:
+        - Alerts
+      summary: ดึงรายการการแจ้งเตือนทั้งหมด
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+    post:
+      tags:
+        - Alerts
+      summary: สร้างการแจ้งเตือนใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - severity
+                - status
+                - message
+              properties:
+                type:
+                  type: string
+                severity:
+                  type: string
+                status:
+                  type: string
+                message:
+                  type: string
+      responses:
+        '201':
+          description: สร้างสำเร็จ
+        '405':
+          description: Method not allowed
+
+  /api/alerts/{id}:
+    get:
+      tags:
+        - Alerts
+      summary: ดึงข้อมูลการแจ้งเตือนตามไอดี
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: สำเร็จ
+        '404':
+          description: ไม่พบการแจ้งเตือน
+
+  /api/status:
+    get:
+      tags:
+        - Status
+      summary: ดึงสถานะระบบ
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+
+components:
+  schemas:
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        detectedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SystemStatus:
+      type: object
+      properties:
+        smokeDetected:
+          type: boolean
+        fireDetected:
+          type: boolean
+        systemStatus:
+          type: string
+        lastUpdated:
+          type: string
+          format: date-time
